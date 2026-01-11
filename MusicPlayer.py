@@ -19,10 +19,6 @@ songplaying = queue[curindex]
 play = True
 print("Now playing: ", songplaying)
 
-ranking = {}
-for i in queue:
-    ranking[i] = 0
-
 def playorpause(play, songplaying):
     if play:
         print("Song Paused ", songplaying)
@@ -33,44 +29,35 @@ def playorpause(play, songplaying):
         play = True
         return play
     
+ranking = {}
+for i in queue:
+    ranking[i] = 0
 
-def shuffle(queue, curindex, songplaying, playd):
-    print("Shuffling Playlist")
+def smartshuffle(queue, curindex, songplaying, ranking, playd):
+    print("Smart Shuffling playlist")
     queue.remove(songplaying)
     queue.extend(playd)
-    random.shuffle(queue)
+    upper = []
+    middle = []
+    lower = []
+    for rank in ranking:
+        songrange = ranking[rank]
+        if songrange >= 5:
+            upper.append(rank)
+        elif songrange < 5 and songrange > -2:
+            middle.append(rank)
+        else:
+            lower.append(rank)
+    queue.clear()
+    queue.extend(upper)
+    queue.extend(middle)
+    queue.extend(lower)
     queue.insert(0, songplaying)
     curindex = 0
     print(queue[curindex + 1:])
     count = 0
     playd = []
-    return queue, curindex, count, playd
-
-
-# def smartshuffle(queue, curindex, songplaying, ranking, playd):
-#     print("Smart Shuffling playlist")
-#     queue.remove(songplaying)
-#     queue.extend(playd)
-#     upper = []
-#     middle = []
-#     lower = []
-#     for rank in ranking:
-#         range = ranking[rank]
-#         if range >= 5:
-#             upper.append(rank)
-#         elif range < 5 and range > -2:
-#             middle.append(rank)
-#         else:
-#             lower.append(rank)
-#     queue.clear()
-#     queue.extend(upper)
-#     queue.extend(middle)
-#     queue.extend(lower)
-#     queue.insert(0, songplaying)
-#     curindex = 0
-#     print(queue[curindex + 1:])
-#     return queue, curindex, ranking
-
+    return queue, curindex, ranking, count, playd
 
 playd = []
 def skip(songplaying, curindex, queue, playd):
@@ -112,7 +99,7 @@ while True:
         case 1:
             play = playorpause(play, songplaying)
         case 2:
-            queue, curindex, count, playd = shuffle(queue, curindex, songplaying, playd)
+            queue, curindex, ranking, count, playd = smartshuffle(queue, curindex, songplaying, ranking, playd)
         case 3:
             songplaying, queue, playd = skip(songplaying, curindex, queue, playd)
         case 4:
