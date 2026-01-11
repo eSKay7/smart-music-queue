@@ -49,6 +49,9 @@ def smartshuffle(queue, curindex, songplaying, ranking, playd):
         else:
             lower.append(rank)
     queue.clear()
+    random.shuffle(upper)
+    random.shuffle(middle)
+    random.shuffle(lower)
     queue.extend(upper)
     queue.extend(middle)
     queue.extend(lower)
