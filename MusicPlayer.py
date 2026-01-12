@@ -1,4 +1,8 @@
 import random
+import json
+import os 
+
+RANKED_FILE = "rankedfile.json"
 
 playlist1 = [1,2,3,4,5,6,7,8,9,10]
 playlist2 = [101,102,103,104,105,106,107,108,109,110]
@@ -33,10 +37,27 @@ ranking = {}
 for i in queue:
     ranking[i] = 0
 
+def loadrank(queue):
+    if os.path.exists(RANKED_FILE):
+        with open(RANKED_FILE, "r") as file:
+            ranking = json.load(file)
+            newranking = {}
+            for string, integer in ranking.items():
+                newranking[int(string)] = integer
+            ranking = newranking
+            return ranking
+    else:
+        return {song: 0 for song in queue}
+
+ranking = loadrank(queue)
+
+def saverank(ranking):
+    with open(RANKED_FILE, "w") as file:
+        json.dump(ranking, file, indent=4)
+
 def smartshuffle(queue, curindex, songplaying, ranking, playd):
     print("Smart Shuffling playlist")
     queue.remove(songplaying)
-    queue.extend(playd)
     upper = []
     middle = []
     lower = []
@@ -85,6 +106,7 @@ def addtoqueue(queue, curindex, ranking, temp, count):
     print("queue ", queue)
     if queuesong in ranking:
         ranking[queuesong] += 5
+    saverank(ranking)
     print("Added song, Here's the queue: ", queue[curindex + 1:])
     return queue, ranking, temp, count
 
@@ -93,6 +115,7 @@ def removefromqueue(queue, curindex, ranking):
     queue.remove(dequeuesong)
     if dequeuesong in ranking:
         ranking[dequeuesong] -= 3
+    saverank(ranking)
     print("Removed song, Here's the queue: ", queue[curindex + 1:])
     return queue, ranking
 
