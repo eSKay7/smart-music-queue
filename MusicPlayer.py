@@ -19,9 +19,10 @@ match playlist:
 print(queue)        
 
 curindex = 0
-songplaying = queue[curindex]
+songplaying = queue.pop(curindex)
 play = True
 print("Now playing: ", songplaying)
+print("Queue: ",queue)
 
 def playorpause(play, songplaying):
     if play:
@@ -57,7 +58,6 @@ def saverank(ranking):
 
 def smartshuffle(queue, curindex, songplaying, ranking, playd):
     print("Smart Shuffling playlist")
-    queue.remove(songplaying)
     upper = []
     middle = []
     lower = []
@@ -76,39 +76,38 @@ def smartshuffle(queue, curindex, songplaying, ranking, playd):
     queue.extend(upper)
     queue.extend(middle)
     queue.extend(lower)
-    queue.insert(0, songplaying)
+    queue.remove(songplaying)
     curindex = 0
-    print(queue[curindex + 1:])
+    print(queue)
     count = 0
     playd = []
     return queue, curindex, ranking, count, playd
 
 playd = []
-def skip(songplaying, curindex, queue, playd):
-    skipping = queue.pop(0)
-    print("queue: ", queue)
-    playd.append(skipping)
-    print("playd: ", playd)
-    songplaying = queue[curindex]
+def skip(songplaying, curindex, queue, playd, temp):
+    playd.append(songplaying)
+    songplaying = queue.pop(curindex)
+    print("Skipping")
     print("Now playing: ", songplaying)
-    return songplaying, queue, playd
+    print("queue: ", queue)
+    print("playd: ", playd)
+    if temp != 0:
+        temp -= 1
+    return songplaying, queue, playd, temp
 
-count = 0
 temp = 0
-def addtoqueue(queue, curindex, ranking, temp, count):
-    count += 1
-    if count == 1:
-        temp = curindex
-    temp += 1
+def addtoqueue(queue, ranking, temp, songplaying):
     queuesong = int(input("What song do you want to add to queue? "))
-    print("curindex ", curindex)
+    print("temp = ", temp)
+    print("Song playing: ", songplaying)
     queue.insert(temp, queuesong)
+    temp += 1
     print("queue ", queue)
     if queuesong in ranking:
         ranking[queuesong] += 5
     saverank(ranking)
-    print("Added song, Here's the queue: ", queue[curindex + 1:])
-    return queue, ranking, temp, count
+    print("Added song, Here's the queue: ", queue)
+    return queue, ranking, temp
 
 def removefromqueue(queue, curindex, ranking):
     dequeuesong = int(input("What song do you want to remove from queue? "))
@@ -116,7 +115,7 @@ def removefromqueue(queue, curindex, ranking):
     if dequeuesong in ranking:
         ranking[dequeuesong] -= 3
     saverank(ranking)
-    print("Removed song, Here's the queue: ", queue[curindex + 1:])
+    print("Removed song, Here's the queue: ", queue)
     return queue, ranking
 
 while True:
@@ -127,9 +126,9 @@ while True:
         case 2:
             queue, curindex, ranking, count, playd = smartshuffle(queue, curindex, songplaying, ranking, playd)
         case 3:
-            songplaying, queue, playd = skip(songplaying, curindex, queue, playd)
+            songplaying, queue, playd, temp = skip(songplaying, curindex, queue, playd, temp)
         case 4:
-            queue, ranking, temp, count = addtoqueue(queue, curindex, ranking, temp, count)
+            queue, ranking, temp = addtoqueue(queue, ranking, temp, songplaying)
         case 5:
             queue, ranking = removefromqueue(queue, curindex, ranking) 
         case 6:
