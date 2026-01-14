@@ -1,3 +1,4 @@
+# Core Logic : Backend 
 import random
 import json
 import os 
@@ -127,12 +128,14 @@ class MusicPlayer:
             if dequeue_song in self.ranking:
                 self.ranking[dequeue_song] -= 3
             self.save_rank()
+        else: 
+            print("Song is not in queue")
         return self.get_state()
     
     def save_rank(self):
         try:
             with open(RANKED_FILE, "w") as file:
-                json.dump({str(k): v for k, v in self.ranking.items()}, file, indent=4)
+                json.dump({str(song): rank for song, rank in self.ranking.items()}, file, indent=4)
         except Exception as e:
             raise
 
@@ -143,19 +146,18 @@ class MusicPlayer:
                     data = json.load(file)
                 except json.JSONDecodeError:
                     data = {}
-                # convert keys back to int
-                newranking = {}
-                for string, integer in data.items():
+                newrankings = {}
+                for song, rank in data.items():
                     try:
-                        newranking[int(string)] = int(integer)
+                        newrankings[int(song)] = rank
                     except Exception:
                         continue
-                self.ranking = newranking
-                return self.ranking
+                self.ranking = newrankings
+            return self.ranking
         else:
             self.ranking = {}
             return self.ranking
-
+                           
     # Created state for front end  
     def get_state(self):
         elapsed = 0.0
@@ -205,7 +207,7 @@ def run_on_cli():
             case 5:
                 song = int(input("What song would you like to remove from queue? "))
                 player.remove_from_queue(song)
-                print("Removed song, Here's the updated queue: ", player.queue) 
+                print("Here's the updated queue: ", player.queue) 
             case 6:
                 break
 
