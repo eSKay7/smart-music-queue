@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Smart Music Queue</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="../static/styles.css" />
+    </head>
+    <body>
+        <div id="app" class="container">
+            <h1>Smart Music Queue</h1>
+
+            <section class="controls">
+                <label for="playlistSelect">Playlist: </label>
+                <select class="playlistSelect"></select>
+                <button id="playbtn">Play</button>
+            </section>
+
+            <section class="now-playing">
+                <h2>Now Playing</h2>
+                <div id="currentSong">-</div>
+                <div class="timer">
+                    <span id="countdown">-</span>
+                    <button id="pause">Pause</button>
+                    <button id="skip">Skip</button>
+                    <label><input id="autoplayToggle" type="checkbox" checked /> Auto advance </label>
+                </div>
+            </section>
+
+            <section class="queue">
+                <h2>Queue</h2>
+                <ul id="queueList"></ul>
+                <div class="modify">
+                    <input id="songInput" type="number" placeholder="song id">
+                    <button id="addsong">Add</button>
+                    <button id="removesong">Remove</button>
+                </div>
+            </section>
+
+            <section class="shuffle">
+                <button id="shufflebtn">Smart shuffle</button>
+            </section>
+
+            <div id="status" class="status"></div>
+        </div>
+
+        <!-- <script src="/static/app.js"></script> -->
+    </body>
+</html>
