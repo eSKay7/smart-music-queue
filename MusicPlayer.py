@@ -172,7 +172,7 @@ class MusicPlayer:
             "temp": self.temp,
             "ranking": dict(self.ranking),
             "playd": list(self.playd),
-            "elapsed": float(elapsed),
+            "elapsed": float(elapsed)
         }
 
 # Running the code and showing data on Command Line using the class defined above
