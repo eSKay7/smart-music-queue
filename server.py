@@ -42,6 +42,11 @@ def skip_song():
     state = player.skip(early=early)
     return jsonify(state)
 
+@app.route("/api/shuffle", methods=["POST"])
+def shuffle_queue():
+    state = player.smart_shuffle()
+    return jsonify(state)
+
 @app.route("/api/add", methods=["POST"])
 def add_song():
     data = request.get_json() or {}
