@@ -71,22 +71,6 @@ def remove_song():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     
-@app.route("/api/save_rank", methods=["POST"])
-def save_song_rank():
-    try:
-        player.save_rank()
-        return jsonify({"rank saved": True})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-@app.route("/api/load_rank", methods=["POST"])
-def load_song_rank():
-    try:
-        player.load_rank()
-        return jsonify({"rank loaded": True})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
 @app.route("/static/<path:path>")
 def send_static(path):
     return send_from_directory("static", path)
