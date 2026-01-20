@@ -91,7 +91,7 @@ async function startCountdown(){
         $('countdown').textContent = `${remaining}s`;
         if (remaining <= 0){
             if ($('autoplayToggle').checked){
-                doSkip(/*User initiated = */false, /*Auto incremented = */true);
+                doSkip(/*User initiated = */false);
             }
             else{
                 stopCountdown();
