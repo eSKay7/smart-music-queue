@@ -25,7 +25,7 @@ class MusicPlayer:
         self.temp: int = 0                                      # Index for adding to queue
         self.ranking: Dict[int, int] = {}                       # Dictionary storing the ranking of songs
         self.song_start_time: Optional[float] = None            # Time when current song started
-        self.load_rank()
+        self.cur_playlist_id: Optional[str] = None
     
     def get_playlist(self):
         return [{"id": pid, "name": f"Playlist {pid}", "count": len(pl)} for pid, pl in self.playlists.items()]
@@ -33,6 +33,8 @@ class MusicPlayer:
     def start_playing(self, playlist_id: str):
         if playlist_id not in self.playlists:
             raise ValueError("Playlist doesn't exist")
+        self.cur_playlist_id = str(playlist_id)
+        self.load_rank()
         self.queue = list(self.playlists[playlist_id])
         self.curindex = 0
         if self.queue:
@@ -47,7 +49,6 @@ class MusicPlayer:
         for song in (self.queue + ([self.songplaying] if self.songplaying else [])):
             if song not in self.ranking:
                 self.ranking[song] = 0
-        self.save_rank()
         return self.get_state()      
     
     def play_or_pause(self):
@@ -134,8 +135,17 @@ class MusicPlayer:
     
     def save_rank(self):
         try:
+            if os.path.exists(RANKED_FILE):
+                with open(RANKED_FILE, "r") as file:
+                    try:
+                        data = json.load(file)
+                    except json.JSONDecodeError:
+                        data = {}
+            else:
+                data = {}
+            data[str(self.cur_playlist_id)] = {str(song): rank for song, rank in self.ranking.items()}
             with open(RANKED_FILE, "w") as file:
-                json.dump({str(song): rank for song, rank in self.ranking.items()}, file, indent=4)
+                json.dump(data, file, indent=4)
         except Exception as e:
             raise
 
@@ -147,7 +157,8 @@ class MusicPlayer:
                 except json.JSONDecodeError:
                     data = {}
                 newrankings = {}
-                for song, rank in data.items():
+                playlistrank = data.get(str(self.cur_playlist_id), {})
+                for song, rank in playlistrank.items():
                     try:
                         newrankings[int(song)] = rank
                     except Exception:
