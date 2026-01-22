@@ -23,7 +23,11 @@ class MusicPlayer:
         self.playing: bool = False                              # To determine if something is playing
         self.playd: List[int] = []                              # List of songs played
         self.temp: int = 0                                      # Index for adding to queue
-        self.ranking: Dict[int, int] = {}                       # Dictionary storing the ranking of songs
+        '''
+                                    0           1         2         3
+        ranking = {"song" : ["early skipped", "added", "played", "removed"]}
+        '''
+        self.ranking: Dict[int, List[int]] = {}                       # Dictionary storing the ranking of songs
         self.song_start_time: Optional[float] = None            # Time when current song started
         self.cur_playlist_id: Optional[str] = None
     
@@ -48,7 +52,7 @@ class MusicPlayer:
         # Initializing the ranking dictionary with songs in queue
         for song in (self.queue + ([self.songplaying] if self.songplaying else [])):
             if song not in self.ranking:
-                self.ranking[song] = 0
+                self.ranking[song] = [0]*4
         return self.get_state()      
     
     def play_or_pause(self):
@@ -71,26 +75,37 @@ class MusicPlayer:
         return self.get_state()
     
     def smart_shuffle(self):
-        print("Smart Shuffling playlist")
-        upper = []
-        middle = []
-        lower = []
-        for song, rank in self.ranking.items():
-            if rank >= 5:
-                upper.append(song)
-            elif rank < 5 and rank > -2:
-                middle.append(song)
-            else:
-                lower.append(song)
-        random.shuffle(upper)
-        random.shuffle(middle)
-        random.shuffle(lower)
+        # print("Smart Shuffling playlist")
+        # upper = []
+        # middle = []
+        # lower = []
+        # for song, rank in self.ranking.items():
+        #     if rank >= 5:
+        #         upper.append(song)
+        #     elif rank < 5 and rank > -2:
+        #         middle.append(song)
+        #     else:
+        #         lower.append(song)
+        # random.shuffle(upper)
+        # random.shuffle(middle)
+        # random.shuffle(lower)
+        # newqueue = []
+        # newqueue.extend(upper)
+        # newqueue.extend(middle)
+        # newqueue.extend(lower)
+        # if self.songplaying in newqueue:
+        #     newqueue.remove(self.songplaying)
+        # self.queue = newqueue
+        # self.curindex = 0
+        # self.playd = []
+        # self.temp = 0
+        print("Completely random shuffling playlist")
         newqueue = []
-        newqueue.extend(upper)
-        newqueue.extend(middle)
-        newqueue.extend(lower)
+        for song, rank in self.ranking.items():
+            newqueue.append(song)
         if self.songplaying in newqueue:
             newqueue.remove(self.songplaying)
+        random.shuffle(newqueue)
         self.queue = newqueue
         self.curindex = 0
         self.playd = []
@@ -101,7 +116,10 @@ class MusicPlayer:
         if self.songplaying:
             if early:
                 self.ranking.setdefault(self.songplaying, 0)
-                self.ranking[self.songplaying] -= 2
+                self.ranking[self.songplaying][0] += 1
+            else:
+                self.ranking.setdefault(self.songplaying, 0)
+                self.ranking[self.songplaying][2] += 1
             self.playd.append(self.songplaying)
         if self.queue:   
             self.songplaying = self.queue.pop(self.curindex)
@@ -119,7 +137,7 @@ class MusicPlayer:
         self.queue.insert(self.temp, queue_song)
         self.temp += 1
         if queue_song in self.ranking:
-            self.ranking[queue_song] += 5
+            self.ranking[queue_song][1] += 1
         self.save_rank()
         return self.get_state()
     
@@ -127,7 +145,7 @@ class MusicPlayer:
         if dequeue_song in self.queue:
             self.queue.remove(dequeue_song)
             if dequeue_song in self.ranking:
-                self.ranking[dequeue_song] -= 3
+                self.ranking[dequeue_song][3] += 1
             self.save_rank()
         else: 
             print("Song is not in queue")
@@ -146,7 +164,7 @@ class MusicPlayer:
             data[str(self.cur_playlist_id)] = {str(song): rank for song, rank in self.ranking.items()}
             with open(RANKED_FILE, "w") as file:
                 json.dump(data, file, indent=4)
-        except Exception as e:
+        except Exception:
             raise
 
     def load_rank(self):
