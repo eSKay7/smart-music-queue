@@ -4,6 +4,7 @@ import json
 import os 
 import time
 from typing import Dict, List, Optional
+from ml_sample import traindata
 
 RANKED_FILE = "rankedfile.json"
 
@@ -111,6 +112,21 @@ class MusicPlayer:
         self.playd = []
         self.temp = 0
         return self.get_state()
+    
+    def train(self):
+        if not self.songplaying:
+            print("No song playing, skipping ML")
+            return
+        if self.songplaying not in self.ranking:
+            print("Song has not data")
+            return
+        model = traindata(self.ranking)
+        if not model:
+            print("Data not enough")
+            return
+        features = [self.ranking[self.songplaying]]
+        prob = model.predict_proba(features)[0][1]
+        print(f"Song {self.songplaying} like probability: {prob}")
 
     def skip(self, early: bool = False):
         if self.songplaying:
