@@ -31,6 +31,7 @@ class MusicPlayer:
         self.ranking: Dict[int, List[int]] = {}                       # Dictionary storing the ranking of songs
         self.song_start_time: Optional[float] = None            # Time when current song started
         self.cur_playlist_id: Optional[str] = None
+        self.model = None
     
     def get_playlist(self):
         return [{"id": pid, "name": f"Playlist {pid}", "count": len(pl)} for pid, pl in self.playlists.items()]
@@ -76,67 +77,72 @@ class MusicPlayer:
         return self.get_state()
     
     def smart_shuffle(self):
-        # print("Smart Shuffling playlist")
-        # upper = []
-        # middle = []
-        # lower = []
-        # for song, rank in self.ranking.items():
-        #     if rank >= 5:
-        #         upper.append(song)
-        #     elif rank < 5 and rank > -2:
-        #         middle.append(song)
-        #     else:
-        #         lower.append(song)
-        # random.shuffle(upper)
-        # random.shuffle(middle)
-        # random.shuffle(lower)
-        # newqueue = []
-        # newqueue.extend(upper)
-        # newqueue.extend(middle)
-        # newqueue.extend(lower)
-        # if self.songplaying in newqueue:
-        #     newqueue.remove(self.songplaying)
-        # self.queue = newqueue
-        # self.curindex = 0
-        # self.playd = []
-        # self.temp = 0
-        print("Completely random shuffling playlist")
-        newqueue = []
-        for song, rank in self.ranking.items():
-            newqueue.append(song)
-        if self.songplaying in newqueue:
-            newqueue.remove(self.songplaying)
-        random.shuffle(newqueue)
-        self.queue = newqueue
+        if not self.model and self.ranking:
+            self.train()
+        if not self.model:
+            print("Completely random shuffling playlist")
+            newqueue = []
+            for song, rank in self.ranking.items():
+                newqueue.append(song)
+            if self.songplaying in newqueue:
+                newqueue.remove(self.songplaying)
+            random.shuffle(newqueue)
+            self.queue = newqueue
+            self.curindex = 0
+            self.playd = []
+            self.temp = 0
+            return self.get_state()
+        
+        scores = []
+        for song in self.ranking:
+            score = self.predict_song_score(song)
+            scores.append((song, score))
+
+        scores.sort(key=lambda x: x[1], reverse=True)
+        upper, middle, lower = [], [], []
+        for song, score in scores:
+            if score >= 0.66:
+                upper.append(song)
+            elif score >= 0.33:
+                middle.append(song)
+            else:
+                lower.append(song)
+        random.shuffle(upper)
+        random.shuffle(middle)
+        random.shuffle(lower)
+        self.queue = upper + middle + lower
+        if self.songplaying in self.queue:
+            self.queue.remove(self.songplaying)
         self.curindex = 0
         self.playd = []
         self.temp = 0
+        print("Shuffling based on ML rankings")
         return self.get_state()
     
     def train(self):
-        if not self.songplaying:
-            print("No song playing, skipping ML")
-            return
-        if self.songplaying not in self.ranking:
-            print("Song has not data")
-            return
         model = traindata(self.ranking)
         if not model:
-            print("Data not enough")
+            print("Data insufficient")
             return
-        features = [self.ranking[self.songplaying]]
-        prob = model.predict_proba(features)[0][1]
-        print(f"Song {self.songplaying} like probability: {prob}")
+        self.model = model
+        print("Updated the ML model")
+
+    def predict_song_score(self, song):
+        if not self.model or song not in self.ranking:
+            return 0.5
+        features = [self.ranking[song]]
+        return self.model.predict_proba(features)[0][1]
 
     def skip(self, early: bool = False):
         if self.songplaying:
             if early:
-                self.ranking.setdefault(self.songplaying, 0)
+                self.ranking.setdefault(self.songplaying, [0,0,0,0])
                 self.ranking[self.songplaying][0] += 1
             else:
-                self.ranking.setdefault(self.songplaying, 0)
+                self.ranking.setdefault(self.songplaying, [0,0,0,0])
                 self.ranking[self.songplaying][2] += 1
             self.playd.append(self.songplaying)
+        self.train()
         if self.queue:   
             self.songplaying = self.queue.pop(self.curindex)
             self.song_start_time = time.time()
@@ -155,6 +161,7 @@ class MusicPlayer:
         if queue_song in self.ranking:
             self.ranking[queue_song][1] += 1
         self.save_rank()
+        self.train()
         return self.get_state()
     
     def remove_from_queue(self, dequeue_song: int):
@@ -163,6 +170,7 @@ class MusicPlayer:
             if dequeue_song in self.ranking:
                 self.ranking[dequeue_song][3] += 1
             self.save_rank()
+            self.train()
         else: 
             print("Song is not in queue")
         return self.get_state()
