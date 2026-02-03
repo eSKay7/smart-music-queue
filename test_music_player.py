@@ -41,3 +41,23 @@ def test_remove_from_queue(start_player):
     start_player.skip(False)
     assert start_player.songplaying == 3
     assert 4 not in start_player.queue
+
+def test_shuffle_behavior(start_player):
+    cursong = start_player.songplaying
+    originalqueue = list(start_player.queue)
+    start_player.smart_shuffle()
+    assert start_player.queue != originalqueue
+    assert start_player.songplaying == cursong
+    assert len(start_player.queue) == 9
+
+def test_ml_model_creation_failed(player):
+    player.train()
+    assert player.model is None
+
+def test_ml_model_creation_successful(start_player):
+    start_player.skip(False)
+    for _ in range(2):
+        start_player.skip(True)
+    start_player.add_to_queue(10)
+    start_player.train()
+    assert start_player.model is not None
