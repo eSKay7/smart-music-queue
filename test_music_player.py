@@ -50,6 +50,24 @@ def test_shuffle_behavior(start_player):
     assert start_player.songplaying == cursong
     assert len(start_player.queue) == 9
 
+def test_smart_shuffle_behavior_mock_data(start_player):
+    start_player.ranking = {
+                        1: [0, 0, 1, 0],
+                        2: [0, 0, 0, 1],
+                        3: [0, 5, 5, 0],
+                        4: [5, 0, 0, 3],
+                        5: [0, 0, 1, 0],
+                        6: [0, 0, 1, 0],  
+                        7: [0, 0, 1, 0],
+                        8: [0, 0, 1, 0],
+                        9: [0, 0, 1, 0],
+                        10: [0, 0, 1, 0],
+                        }
+    start_player.train()
+    assert start_player.model is not None
+    start_player.smart_shuffle()
+    assert start_player.queue.index(3) < start_player.queue.index(4)
+
 def test_ml_model_creation_failed(player):
     player.train()
     assert player.model is None
@@ -61,3 +79,17 @@ def test_ml_model_creation_successful(start_player):
     start_player.add_to_queue(10)
     start_player.train()
     assert start_player.model is not None
+
+def test_predict_song_score(start_player):
+    assert 0 <= start_player.predict_song_score(start_player.songplaying) <= 1
+
+def test_liked_song_ranking(start_player):
+    liked_song = start_player.queue[-1]
+    for _ in range(5):
+        start_player.add_to_queue(liked_song)
+        start_player.skip(False)
+    start_player.skip(False)
+    start_player.train()
+    assert start_player.model is not None
+    start_player.smart_shuffle()
+    assert start_player.queue.index(liked_song) < len(start_player.queue) // 2
