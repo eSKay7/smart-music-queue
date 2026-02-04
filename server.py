@@ -2,7 +2,7 @@
 
 from flask import Flask, jsonify, request, send_from_directory
 import os
-from MusicPlayer import MusicPlayer 
+from music_player import MusicPlayer 
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 
